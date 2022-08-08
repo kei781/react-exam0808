@@ -11,35 +11,50 @@ function App() {
   const [selectedTodo, setSelectedTodo] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const nextId = useRef(4);
+  // const nextId = useRef(4);
 
   const onInsert = (text) => {
-    const todo = {
-      id: nextId.current,
-      text: text,
-      checked: false,
-    };
-    const onPost = async () => {
+    // const todo = {
+    //   id: nextId.current,
+    //   text: text,
+    //   checked: false,
+    // };
+    /*작업내용, 쿼리는 실행되는데 text가 안전해지는듯?*/
+    const onPost = async (text) => {
       try {
         const data = await axios({
           url: `http://localhost:4000/todos/`,
           method: "post",
           text: text,
         });
-        setTodos(data.data);
+        //setTodos(data.data); /* .map 오류의 원흉;*/
       } catch (e) {
         setError(e);
       }
     };
-    onPost();
-    setTodos((todos) => todos.concat(todo));
-    nextId.current++;
+    onPost(text);
+    // setTodos((todos) => todos.concat(todo));
+    // nextId.current++;
   };
 
   const onInsertToggle = () => {
     setInsertToggle((prev) => !prev);
   };
-
+  /*안됨*/
+  const onPatch = async (id, text) => {
+    try {
+      const data = await axios({
+        url: `http://localhost:4000/todos/${id}`,
+        method: "patch",
+        text: { text },
+        perform_date: Date.now(),
+      });
+      //setTodos(data.data);
+    } catch (e) {
+      setError(e);
+    }
+  };
+  /*됨. todos.map is not a function에러뜸.*/
   const onRemove = async (id) => {
     /**/
     try {
@@ -47,12 +62,11 @@ function App() {
         url: `http://localhost:4000/todos/${id}`,
         method: "DELETE",
       });
-      console.log(data.data);
-      setTodos(data.data);
+      //console.log(data.data);
+      //setTodos(data.data);
     } catch (e) {
       setError(e);
     }
-    getData();
 
     // setTodos((todos) => todos.filter((todo) => todo.id !== id));
   };
@@ -69,20 +83,6 @@ function App() {
     }
   };
 
-  const onPatch = async (id, text) => {
-    try {
-      const data = await axios({
-        url: `http://localhost:4000/todos/${id}`,
-        method: "patch",
-        text: { text },
-        perform_date: Date.now(),
-      });
-      setTodos(data.data);
-    } catch (e) {
-      setError(e);
-    }
-  };
-
   const onUpdate = (id, text) => {
     setTodos((todos) =>
       todos.map((todo) => (todo.id === id ? { ...todo, text } : todo))
@@ -90,7 +90,7 @@ function App() {
     onInsertToggle();
   };
 
-  const getData = useEffect(() => {
+  useEffect(() => {
     const getData = async () => {
       try {
         const data = await axios({
